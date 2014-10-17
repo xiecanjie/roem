@@ -1,0 +1,86 @@
+require "std"
+
+local pl = {}
+pl.utils = require "pl.utils"
+pl.path = require "pl.path"
+pl.dir = require "pl.dir"
+
+local lfs = require "lfs"
+local cli = require "cliargs"
+
+--  @debug
+require("pl.app").require_here("src")
+local Context = require "Roem.Context"
+local Reporter = require "Roem.Reporter"
+
+local function getArgs()
+	local defaults = 
+	{
+		pattern = "^%./spec/.+%.lua$", 
+		lpath = "./src/?.lua;./src/?/init.lua", 
+	}
+	
+	cli:set_name("roem")
+	cli:add_option("-p, --pattern=PATTERN", "only run test files matching the LuaPattern", defaults.pattern)
+	cli:add_option("-m, --lpath=PATH", "optional path to be prefixed to the Lua module search path", defaults.lpath)
+	
+	local args, hasError = cli:parse()
+	if hasError then
+		os.exit(1)
+	end
+	return args
+end
+
+local function setup(args)
+	local sep = ";"
+	local path = string.split(args.lpath, sep)
+	table.insert(path, package.path)
+	package.path = table.concat(path, sep)
+	
+	local files = list.map(function(path)
+		return string.gsub(path, "\\", "/")
+	end, pl.dir.getallfiles("."))
+	
+	files = list.filter(function(path)
+		return string.match(path, args.pattern) ~= nil
+	end, files)
+	
+	return files
+end
+
+local function loadSpec(path, fenv)
+	local func, err = loadfile(path)
+	if func == nil then
+		pl.utils.fprintf(io.stderr, "%s\n", err)
+		return
+	end
+	
+	local succ, err = pcall(setfenv(func, fenv))
+	if not succ then
+		pl.utils.fprintf(io.stderr, "%s\n", err)
+		return
+	end
+end
+
+local function createContext()
+	local context = Context:new()
+	local reporterOptions = 
+	{
+		output = function(s)
+			io.stdout:write(s)
+		end, 
+		onComplete = function(passed)
+			os.exit(passed and 0 or 1)
+		end, 
+	}
+	context:addReporter(Reporter:new(reporterOptions))
+	setmetatable(context:getfenv(), { __index = _G })
+	return context
+end
+
+local files = setup(getArgs())
+local context = createContext()
+for _, file in ipairs(files) do
+	loadSpec(file, context:getfenv())
+end
+context:execute()
