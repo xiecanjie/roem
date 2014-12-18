@@ -11,7 +11,7 @@ function prototype:initialize(options)
 	end
 end
 
-function prototype:spyOn(object, name)
+function prototype:spyOn(object, name, colonCall)
 	if object == nil then
 		error("spyOn could not find an object to spy upon for " .. name .. "()")
 	end
@@ -24,7 +24,7 @@ function prototype:spyOn(object, name)
 		error(name .. " has already been spied upon")
 	end
 	
-	local spy = Spy:create(object, name)
+	local spy = Spy:create(object, name, colonCall)
 	
 	local entry = 
 	{

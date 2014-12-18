@@ -4,7 +4,8 @@ local CallTracker = require "Roem.Spy.CallTracker"
 
 local prototype = Object{}
 
-function prototype:create(object, name)
+function prototype:create(object, name, colonCall)
+	local colonCall = (colonCall ~= false)
 	local isObject = (name ~= nil)
 	
 	if not isObject then
@@ -17,7 +18,7 @@ function prototype:create(object, name)
 	local spy = {}
 	
 	local mt = {}
-	if isObject then
+	if isObject and colonCall then
 		mt.__call = function(spy, object, ...)
 			return spy.impl:call(...)
 		end
