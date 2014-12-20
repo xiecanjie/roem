@@ -1,3 +1,7 @@
+local functional         = require "std.functional"
+local string             = require "std.string"
+local table              = require "std.table"
+local list               = require "std.list"
 local Object		     = require "Roem.Object"
 local Suite			     = require "Roem.Suite"
 local Spec			     = require "Roem.Spec"
@@ -47,7 +51,7 @@ function prototype:initialize()
 	local params = 
 	{
 		description = "--TopLevelSuite--", 
-		queueRunner = bind(self.queueRunnerFactory, self), 
+		queueRunner = self:bind("queueRunnerFactory"), 
 		onStart = function(suite)
 			self.reporter:suiteStarted(suite)
 		end, 
@@ -71,7 +75,7 @@ function prototype:initialize()
 		"pending",				"fail", 
 	}
 	self.fenv = list.depair(list.map(function(command)
-		return { command, bind(self[command], self), }
+		return { command, self:bind(command), }
 	end, commands))
 end
 
@@ -87,7 +91,7 @@ function prototype:execute()
 	local runnablesToRun = { self.topSuite }
 	
 	local allFns = list.map(function(runnable)
-		return bind(runnable.execute, runnable)
+		return self:method(runnable, "execute")
 	end, runnablesToRun)
 	
 	self.reporter:started({ totalSpecsDefined = self.totalSpecsDefined })
@@ -95,13 +99,25 @@ function prototype:execute()
 	local params = 
 	{
 		queueableFns = allFns, 
-		onComplete = bind(self.reporter.done, self.reporter), 
+		onComplete = self:method(self.reporter, "done"), 
 	}
 	self:queueRunnerFactory(params)
 end
 
 --------------------------------------------------------------------------------
 -- private
+
+function prototype:bind(method, ...)
+	local argt = { ... }
+	table.insert(argt, 1, self)
+	return functional.bind(self[method], argt)
+end
+
+function prototype:method(object, method, ...)
+	local argt = { ... }
+	table.insert(argt, 1, object)
+	return functional.bind(object[method], argt)
+end
 
 function prototype:currentSuite()
 	return self.currentlyExecutingSuites[#self.currentlyExecutingSuites]
@@ -116,15 +132,14 @@ function prototype:expectationFactory(spec, actual)
 	{
 		util = MatchersUtil:new(), 
 		actual = actual, 
-		addExpectationResult = bind(spec.addExpectationResult, spec), 
+		addExpectationResult = self:method(spec, "addExpectationResult"), 
 	}
 	return Expectation:Factory(params)
 end
 
 function prototype:expectationResultFactory(attrs)
-	local Formatter = ExceptionFormatter
-	attrs.messageFormatter = bind(Formatter.message, Formatter)
-	attrs.stackFormatter = bind(Formatter.stack, Formatter)
+	attrs.messageFormatter = self:method(ExceptionFormatter, "message")
+	attrs.stackFormatter = self:method(ExceptionFormatter, "stack")
 	return ExpectationResult:buildExpectationResult(attrs)
 end
 
@@ -168,7 +183,7 @@ function prototype:clearStack(fn)
 end
 
 function prototype:queueRunnerFactory(options)
-	options.clearStack = options.clearStack or bind(self.clearStack, self)
+	options.clearStack = options.clearStack or self:bind("clearStack")
 	options.fail = self.fail
 	QueueRunner:new(options):execute()
 end
@@ -192,10 +207,10 @@ function prototype:suiteFactory(description)
 	{
 		description = description, 
 		parentSuite = self.currentDeclarationSuite, 
-		queueRunner = bind(self.queueRunnerFactory, self), 
+		queueRunner = self:bind("queueRunnerFactory"), 
 		onStart = suiteStarted, 
-		expectationFactory = bind(self.expectationFactory, self), 
-		expectationResultFactory = bind(self.expectationResultFactory, self), 
+		expectationFactory = self:bind("expectationFactory"), 
+		expectationResultFactory = self:bind("expectationResultFactory"), 
 		resultCallback = resultCallback, 
 	}
 	suite = Suite:new(params)
@@ -243,14 +258,14 @@ function prototype:specFactory(description, fn, suite, timeout)
 	local params = 
 	{
 		beforeAndAfterFns = self:beforeAndAfterFns(suite), 
-		expectationFactory = bind(self.expectationFactory, self), 
+		expectationFactory = self:bind("expectationFactory"), 
 		resultCallback = specResultCallback, 
-		getSpecName = bind(self.getSpecName, self, suite), 
+		getSpecName = self:bind("getSpecName", suite), 
 		onStart = specStarted, 
 		description = description, 
-		expectationResultFactory = bind(self.expectationResultFactory, self), 
-		queueRunnerFactory = bind(self.queueRunnerFactory, self), 
-		userContext = bind(suite.clonedSharedUserContext, suite), 
+		expectationResultFactory = self:bind("expectationResultFactory"), 
+		queueRunnerFactory = self:bind("queueRunnerFactory"), 
+		userContext = self:method(suite, "clonedSharedUserContext"),
 		queueableFn = fn, 
 	}
 	spec = Spec:new(params)

@@ -1,4 +1,5 @@
-local Reporter = require "Roem.Reporter"
+local functional = require "std.functional"
+local Reporter   = require "Roem.Reporter"
 
 describe("Reporter", function()
 	local out
@@ -9,7 +10,7 @@ describe("Reporter", function()
 		out = {}
 		
 		function out:getWriter()
-			return bind(self.write, self)
+			return functional.bind(self.write, { self })
 		end
 		
 		function out:write(s)

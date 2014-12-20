@@ -1,4 +1,6 @@
-local Object = require "Roem.Object"
+local functional = require "std.functional"
+local table      = require "std.table"
+local Object     = require "Roem.Object"
 
 local prototype = Object{}
 
@@ -15,7 +17,7 @@ function prototype:exec(...)
 end
 
 function prototype:callThrough()
-	self.plan = bind(self.original, self.object)
+	self.plan = functional.bind(self.original, { self.object })
 	return self.spy
 end
 

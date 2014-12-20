@@ -1,3 +1,6 @@
+local string           = require "std.string"
+local table            = require "std.table"
+local list             = require "std.list"
 local Object           = require "Roem.Object"
 local Any              = require "Roem.Any"
 local ObjectContaining = require "Roem.ObjectContaining"
@@ -99,7 +102,7 @@ function prototype:prettyPrint(expected)
 		return '"' .. expected .. '"'
 	end
 	
-	return tostring(expected)
+	return string.tostring(expected)
 end
 
 function prototype:checkType(a, prototype)

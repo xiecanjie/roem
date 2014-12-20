@@ -1,3 +1,6 @@
+local string = require "std.string"
+local table  = require "std.table"
+local list   = require "std.list"
 local Object = require "Roem.Object"
 
 local prototype = Object{}

@@ -1,4 +1,6 @@
-local Object = require "Roem.Object"
+local functional = require "std.functional"
+local list       = require "std.list"
+local Object     = require "Roem.Object"
 
 local prototype = Object{}
 
@@ -22,7 +24,7 @@ function prototype:getCoreMatchers()
 	}
 	return list.depair(list.map(function(name)
 		local matcher = require("Roem.Matchers." .. name)
-		return { name, bind(matcher.new, matcher), }
+		return { name, functional.bind(matcher.new, { matcher }), }
 	end, matchers))
 end
 

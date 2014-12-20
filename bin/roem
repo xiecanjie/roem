@@ -1,9 +1,12 @@
-require "std"
+#!/usr/bin/env lua
+
+local string = require "std.string"
+local list   = require "std.list"
 
 local pl = {}
 pl.utils = require "pl.utils"
-pl.path = require "pl.path"
-pl.dir = require "pl.dir"
+pl.path  = require "pl.path"
+pl.dir   = require "pl.dir"
 
 local lfs = require "lfs"
 local cli = require "cliargs"

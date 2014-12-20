@@ -27,7 +27,7 @@ function prototype:compare(actual, ...)
 	
 	local result = { pass = false }
 	local fmt = "Expected spy %s to have been called with %s but actual calls were %s."
-	local allArgs = actual.calls:allArgs()
+	local allArgs = setmetatable(actual.calls:allArgs(), nil)
 	result.message = string.format(fmt, actual.name, 
 										self:prettyPrint({ ... }), 
 										self:prettyPrint(allArgs))

@@ -1,3 +1,4 @@
+local table  = require "std.table"
 local Object = require "Roem.Object"
 
 local prototype = Object{}

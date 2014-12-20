@@ -1,4 +1,7 @@
-local Object = require "Roem.Object"
+local functional = require "std.functional"
+local table      = require "std.table"
+local list       = require "std.list"
+local Object     = require "Roem.Object"
 
 local prototype = Object{}
 
@@ -91,7 +94,7 @@ function prototype:execute(onComplete)
 	local allFns = {}
 	allFns = list.concat(allFns, self.beforeAllFns)
 	for _, child in ipairs(self.children) do
-		table.insert(allFns, bind(child.execute, child))
+		table.insert(allFns, functional.bind(child.execute, { child }))
 	end
 	allFns = list.concat(allFns, self.afterAllFns)
 	
@@ -100,7 +103,7 @@ function prototype:execute(onComplete)
 		queueableFns = allFns, 
 		onComplete = complete, 
 		userContext = self:sharedUserContext(), 
-		onException = bind(self.onException, self)
+		onException = functional.bind(self.onException, { self })
 	}
 	self.queueRunner(runnerParams)
 end

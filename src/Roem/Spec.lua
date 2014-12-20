@@ -1,4 +1,7 @@
-local Object = require "Roem.Object"
+local functional = require "std.functional"
+local table      = require "std.table"
+local list       = require "std.list"
+local Object     = require "Roem.Object"
 
 local prototype = Object{}
 
@@ -82,7 +85,7 @@ function prototype:execute(onComplete)
 	local params = 
 	{
 		queueableFns = allFns, 
-		onException = bind(self.onException, self), 
+		onException = functional.bind(self.onException, { self }), 
 		onComplete = complete, 
 		userContext = self.userContext(), 
 	}
